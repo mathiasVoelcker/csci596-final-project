@@ -1,1 +1,6 @@
-# csci596-final-project
+HOW TO RUN:
+
+    open terminal and navigate to /main folder
+    run commands:
+        make
+        ./main 
