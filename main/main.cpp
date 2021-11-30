@@ -11,6 +11,7 @@
 #include "imageIO.h"
 #include "openGLHeader.h"
 #include "glutHeader.h"
+#include <math.h>
 
 #include <iostream>
 #include <cstring>
@@ -44,7 +45,7 @@ CONTROL_STATE controlState = ROTATE;
 float landRotate[3] = { 0.0f, 0.0f, 0.0f };
 float landTranslate[3] = { 0.0f, 0.0f, 0.0f };
 float landScale[3] = { 1.0f, 1.0f, 1.0f };
-glm::vec3 camPos = { 2, 1, 5 };
+glm::vec3 camPos = { 0, 0, 5 };
 glm::vec3 camCenter = {0, 0, 0 };
 glm::vec3 camUp = { 0, 1, 0};
 
@@ -326,147 +327,94 @@ void initScene(int argc, char *argv[])
 
 
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  float radius = 1.0f;
+  float sectorCount = 36;
+  float stackCount = 18;
 
-  sizeMesh = 36;
+  float x, y, z, xy, xy1, z1;                              // vertex position
+  float nx, ny, nz, lengthInv = 1.0f / radius;    // vertex normal
+  float s, t;                                     // vertex texCoord
+  float x11, y11, x21, y21, x12, y12, x22, y22, z11, z12;
 
-  // modify the following code accordingly
-  glm::vec3 triangle[36] = {
-    //tri 1
-    glm::vec3(0, 0, 0), 
-    glm::vec3(0, 1, 0),
-    glm::vec3(1, 0, 0),
-    // //tri 2
-    glm::vec3(0, 1, 0),
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 1, 0),
-    //tri3
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 1, 0),
-    glm::vec3(1, 0, 1),
-    //tri4
-    glm::vec3(1, 1, 0),
-    glm::vec3(1, 0, 1),
-    glm::vec3(1, 1, 1),
-    //tri5
-    glm::vec3(1, 0, 1),
-    glm::vec3(1, 1, 1),
-    glm::vec3(0, 0, 1),
-    //tri6
-    glm::vec3(1, 1, 1),
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 1, 1),
-    //tri7
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 1, 1),
-    glm::vec3(0, 0, 0),
-    //tri8
-    glm::vec3(0, 1, 1),
-    glm::vec3(0, 0, 0),
-    glm::vec3(0, 1, 0),
-    //up face
-    glm::vec3(0, 1, 0),
-    glm::vec3(1, 1, 0),
-    glm::vec3(0, 1, 1),
-    glm::vec3(1, 1, 0),
-    glm::vec3(0, 1, 1),
-    glm::vec3(1, 1, 1),
-    //down face
-    glm::vec3(0, 0, 0),
-    glm::vec3(1, 0, 0),
-    glm::vec3(0, 0, 1),
-    glm::vec3(1, 0, 0),
-    glm::vec3(0, 0, 1),
-    glm::vec3(1, 0, 1)
-  };
+  float sectorStep = 2 * M_PI / sectorCount;
+  float stackStep = M_PI / stackCount;
+  float sectorAngle = 0, stackAngle, stackAngle1 = 0, sectorAngle1;
 
-  glm::vec3 normals[36]
+  int totalVertices = (sectorCount + 1) * (stackCount + 1) * 6;
+  glm::vec3 vertices[totalVertices];
+  glm::vec3 normals[totalVertices];
+  glm::vec2 texCords[totalVertices];
+
+  //todo: remove this, this is just for testing
+  glm::vec4 color[totalVertices];
+
+  for(int i = 0; i <= stackCount; ++i)
   {
-    //front
-    glm::vec3(0, 0, -1),
-    glm::vec3(0, 0, -1),
-    glm::vec3(0, 0, -1),
-    glm::vec3(0, 0, -1),
-    glm::vec3(0, 0, -1),
-    glm::vec3(0, 0, -1),
-    //right
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 0, 0),
-    glm::vec3(1, 0, 0),
-    //back
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 0, 1),
-    glm::vec3(0, 0, 1),
-    //left
-    glm::vec3(-1, 0, 0),
-    glm::vec3(-1, 0, 0),
-    glm::vec3(-1, 0, 0),
-    glm::vec3(-1, 0, 0),
-    glm::vec3(-1, 0, 0),
-    glm::vec3(-1, 0, 0),
-    //up
-    glm::vec3(0, 1, 0),
-    glm::vec3(0, 1, 0),
-    glm::vec3(0, 1, 0),
-    glm::vec3(0, 1, 0),
-    glm::vec3(0, 1, 0),
-    glm::vec3(0, 1, 0),
-    //down
-    glm::vec3(0, -1, 0),
-    glm::vec3(0, -1, 0),
-    glm::vec3(0, -1, 0),
-    glm::vec3(0, -1, 0),
-    glm::vec3(0, -1, 0),
-    glm::vec3(0, -1, 0),
-  };
+      // if (stackAngle1 != 0)
+        stackAngle1 = stackAngle;
+      // else 
+      //   stackAngle1 = M_PI / 2 - (stackCount - 1) * stackStep;
+      stackAngle = M_PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
+      xy = radius * cosf(stackAngle);             // r * cos(u)
+      z11 = radius * sinf(stackAngle);              // r * sin(u)
 
-  glm::vec4 color[36] = {
-    {0, 0, 1, 1},
-    {0, 0, 1, 1},
-    {0, 0, 1, 1},
-    {0, 0, 1, 1},
-    {0, 0, 1, 1},
-    {0, 0, 1, 1},
-    {0, 1, 0, 1},
-    {0, 1, 0, 1},
-    {0, 1, 0, 1},
-    {0, 1, 0, 1},
-    {0, 1, 0, 1},
-    {0, 1, 0, 1},
-    {1, 0, 0, 1},
-    {1, 0, 0, 1},
-    {1, 0, 0, 1},
-    {1, 0, 0, 1},
-    {1, 0, 0, 1},
-    {1, 0, 0, 1},
-    {1, 0, 1, 1},
-    {1, 0, 1, 1},
-    {1, 0, 1, 1},
-    {1, 0, 1, 1},
-    {1, 0, 1, 1},
-    {1, 0, 1, 1},
-    {1, 1, 0, 1},
-    {1, 1, 0, 1},
-    {1, 1, 0, 1},
-    {1, 1, 0, 1},
-    {1, 1, 0, 1},
-    {1, 1, 0, 1},
-    {0, 1, 1, 1},
-    {0, 1, 1, 1},
-    {0, 1, 1, 1},
-    {0, 1, 1, 1},
-    {0, 1, 1, 1},
-    {0, 1, 1, 1},   
-  };
+      xy1 = radius * cosf(stackAngle1);
+      z12 = radius * sinf(stackAngle1);
+
+      // add (sectorCount+1) vertices per stack
+      // the first and last vertices have same position and normal, but different tex coords
+      for(int j = 0; j <= sectorCount; ++j)
+      {
+          sectorAngle = j * sectorStep;           // starting from 0 to 2pi
+          sectorAngle1 = (j + 1) * sectorStep;
+          // vertex position (x, y, z)
+          x11 = xy * cosf(sectorAngle);
+          y11 = xy * sinf(sectorAngle);
+          x21 = xy * cosf(sectorAngle1);
+          y21 = xy * sinf(sectorAngle1);
+          x12 = xy1 * cosf(sectorAngle);
+          y12 = xy1 * sinf(sectorAngle);
+          x22 = xy1 * cosf(sectorAngle1);
+          y22 = xy1 * sinf(sectorAngle1);
+
+          int index = (j + (sectorCount * i)) * 6;
+          vertices[index] = {x11, y11, z11};
+          vertices[1 + index] = {x22, y22, z12};
+          vertices[2 + index] = {x12, y12, z12};
+          vertices[3 + index] = {x11, y11, z11};
+          vertices[4 + index] = {x22, y22, z12};
+          vertices[5 + index] = {x21, y21, z11};
+
+          // normalized vertex normal (nx, ny, nz)
+          nx = x * lengthInv;
+          ny = y * lengthInv;
+          nz = z * lengthInv;
+          // normals[index] = {nx, ny, nz};
+          normals[index] = {x11 * lengthInv, y11 * lengthInv, z11 * lengthInv};
+          normals[1 + index] = {x22 * lengthInv, y22 * lengthInv, z12 * lengthInv};
+          normals[2 + index] = {x12 * lengthInv, y12 * lengthInv, z12 * lengthInv};
+          normals[3 + index] = {x11 * lengthInv, y11 * lengthInv, z11 * lengthInv};
+          normals[4 + index] = {x22 * lengthInv, y22 * lengthInv, z12 * lengthInv};
+          normals[5 + index] = {x21 * lengthInv, y21 * lengthInv, z11 * lengthInv};
+
+          // vertex tex coord (s, t) range between [0, 1]
+          s = (float)j / sectorCount;
+          t = (float)i / stackCount;
+          // texCords[index] = {s, t};
+          color[index] = {0, 1, 1, 1};
+          color[1 + index] = {0, 1, 1, 1};
+          color[2 + index] = {0, 1, 1, 1};
+          color[3 + index] = {0, 1, 1, 1};
+          color[4 + index] = {0, 1, 1, 1};
+          color[5 + index] = {0, 1, 1, 1};
+      }
+  }
+
+  sizeMesh = totalVertices;
 
   glGenBuffers(1, &triVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, triVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeMesh, triangle,
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * sizeMesh, vertices,
                GL_STATIC_DRAW);
   glGenBuffers(1, &triNormalBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, triNormalBuffer);
