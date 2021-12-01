@@ -24,6 +24,7 @@ protected:
   GLint h_modelViewMatrix; // handle to the modelViewMatrix variable in the shader
   GLint h_normalMatrix;
   GLint h_viewLightDirection;
+  GLint h_textureImage;
   // Note: we use the following naming convention: h_name is a handle to the shader variable "name".
   GLint h_la;
   GLint h_ld;

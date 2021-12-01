@@ -6,11 +6,18 @@
   Student username: <type your USC username here>
 */
 
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+
 #include "basicPipelineProgram.h"
 #include "openGLMatrix.h"
 #include "imageIO.h"
 #include "openGLHeader.h"
 #include "glutHeader.h"
+#include "Bmp.h"
 #include <math.h>
 
 #include <iostream>
@@ -55,8 +62,9 @@ char windowTitle[512] = "CSCI 420 homework I";
 
 ImageIO * heightmapImage;
 
-GLuint triVertexBuffer, triColorVertexBuffer, triNormalBuffer;
+GLuint triVertexBuffer, triColorVertexBuffer, triNormalBuffer, textCoordBuffer;
 GLuint triVertexArray;
+GLuint texId;
 int sizeMesh;
 
 OpenGLMatrix matrix;
@@ -110,7 +118,7 @@ void displayFunc()
   //results of multiplying view with light vector (0, 0, 1)
   // float viewLightDirection[3] = { view[8] + 2, view[9] + 1, view[10] };
   //what if multiplied by another vector (say 1, 2, 5)
-  float lightVector[4] = { 2, 1, 5, 1 };
+  float lightVector[4] = { -4, 1, 0, 1 };
   // float viewLightDirection[3] = { view[8] , view[9] , view[10] };
   float viewLightDirection[3] = { 
     (view[0] * lightVector[0]) + (view[4] * lightVector[1]) + (view[8] * lightVector[2]), 
@@ -141,6 +149,7 @@ void displayFunc()
   pipelineProgram->SetNormalMatrix(n);
 
   glBindVertexArray(triVertexArray);
+  glBindTexture(GL_TEXTURE_2D, texId);
   // sizeMesh = sizeMesh;
   glDrawArrays(GL_TRIANGLES, 0, sizeMesh);
 
@@ -398,9 +407,19 @@ void initScene(int argc, char *argv[])
           normals[5 + index] = {x21 * lengthInv, y21 * lengthInv, z11 * lengthInv};
 
           // vertex tex coord (s, t) range between [0, 1]
-          s = (float)j / sectorCount;
-          t = (float)i / stackCount;
-          // texCords[index] = {s, t};
+          float s1 = (float)j / sectorCount;
+          float t1 = (float)i / stackCount;
+          float s2 = (float)(j + 1) / sectorCount;
+          float t2 = (float)(i - 1) / stackCount;
+
+          texCords[index] = {s1, t1};
+          texCords[index + 1] = {s2, t2};
+          texCords[index + 2] = {s1, t2};
+          texCords[index + 3] = {s1, t1};
+          texCords[index + 4] = {s2, t2};
+          texCords[index + 5] = {s2, t1};
+
+
           color[index] = {0, 1, 1, 1};
           color[1 + index] = {0, 1, 1, 1};
           color[2 + index] = {0, 1, 1, 1};
@@ -426,6 +445,11 @@ void initScene(int argc, char *argv[])
   glBindBuffer(GL_ARRAY_BUFFER, triColorVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * sizeMesh, color, GL_STATIC_DRAW);
 
+
+  glGenBuffers(1, &textCoordBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, textCoordBuffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * sizeMesh, texCords, GL_STATIC_DRAW);
+
   pipelineProgram = new BasicPipelineProgram;
   int ret = pipelineProgram->Init(shaderBasePath);
   if (ret != 0) abort();
@@ -450,6 +474,15 @@ void initScene(int argc, char *argv[])
   glEnableVertexAttribArray(loc);
   glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, 0, (const void *)0);
 
+  // glBindBuffer(GL_ARRAY_BUFFER, texId);
+
+  glBindBuffer(GL_ARRAY_BUFFER, textCoordBuffer);
+  loc = glGetAttribLocation(pipelineProgram->GetProgramHandle(), "texCoord");
+  glEnableVertexAttribArray(loc);
+  glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+
+  glGenTextures(1, &texId);
+
   glEnable(GL_DEPTH_TEST);
 
   
@@ -464,6 +497,80 @@ void initScene(int argc, char *argv[])
   pipelineProgram->SetPhong(la, ld, ls, ka, kd, ks, alpha);
 
   std::cout << "GL error: " << glGetError() << std::endl;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// load raw image as a texture
+///////////////////////////////////////////////////////////////////////////////
+GLuint loadTexture(const char* fileName, bool wrap)
+{
+    Image::Bmp bmp;
+    if(!bmp.read(fileName))
+        return 0;     // exit if failed load image
+
+    // get bmp info
+    int width = bmp.getWidth();
+    int height = bmp.getHeight();
+    const unsigned char* data = bmp.getDataRGB();
+    // cout <<  << endl;
+    std::cout << std::isprint(data[0]) << std::endl;
+
+    cout << std::isprint(data[1]) << endl;
+    cout << std::isprint(data[2]) << endl;
+    GLenum type = GL_UNSIGNED_BYTE;    // only allow BMP with 8-bit per channel
+
+    // We assume the image is 8-bit, 24-bit or 32-bit BMP
+    GLenum format;
+    int bpp = bmp.getBitCount();
+    if(bpp == 8)
+        format = GL_LUMINANCE;
+    else if(bpp == 24)
+        format = GL_RGB;
+    else if(bpp == 32)
+        format = GL_RGBA;
+    else
+        return 0;               // NOT supported, exit
+
+    // gen texture ID
+    GLuint texture;
+    glGenTextures(1, &texture);
+
+    // set active texture and configure it
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // // select modulate to mix texture with color for shading
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+    // if wrap is true, the texture wraps over at the edges (repeat)
+    //       ... false, the texture ends at the edges (clamp)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap ? GL_REPEAT : GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap ? GL_REPEAT : GL_CLAMP);
+    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // copy texture data
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, type, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // build our texture mipmaps
+    switch(bpp)
+    {
+    case 8:
+        gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_LUMINANCE, type, data);
+        break;
+    case 24:
+        gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, type, data);
+        break;
+    case 32:
+        gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, type, data);
+        break;
+    }
+
+    return texture;
 }
 
 int main(int argc, char *argv[])
@@ -523,6 +630,8 @@ int main(int argc, char *argv[])
   // do initialization
   initScene(argc, argv);
 
+  texId = loadTexture("moon1024.bmp", true);
+  // texId = loadTexture("earth2048.bmp", true);
   // sink forever into the glut loop
   glutMainLoop();
 }

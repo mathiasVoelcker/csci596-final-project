@@ -70,6 +70,7 @@ int BasicPipelineProgram::SetShaderVariableHandles()
   SET_SHADER_VARIABLE_HANDLE(kd);
   SET_SHADER_VARIABLE_HANDLE(ks);
   SET_SHADER_VARIABLE_HANDLE(alpha);
+  SET_SHADER_VARIABLE_HANDLE(textureImage);
   // SET_SHADER_VARIABLE_HANDLE(mode);
   return 0;
 }

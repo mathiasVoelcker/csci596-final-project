@@ -4,6 +4,10 @@ TSMV_CXX_SRC=main.cpp
 TSMV_HEADER=
 TSMV_OBJ=$(notdir $(patsubst %.cpp,%.o,$(TSMV_CXX_SRC)))
 
+BMP_CODE_SRC=Bmp.cpp
+BMP_HEADER=Bmp.h
+BMP_OBJ=$(notdir $(patsubst %.cpp,%.o,$(BMP_CODE_SRC)))
+
 LIB_CODE_CXX_SRC=$(wildcard $(LIB_CODE_BASE)/*.cpp)
 LIB_CODE_HEADER=$(wildcard $(LIB_CODE_BASE)/*.h)
 LIB_CODE_OBJ=$(notdir $(patsubst %.cpp,%.o,$(LIB_CODE_CXX_SRC)))
@@ -12,8 +16,8 @@ IMAGE_LIB_SRC=$(wildcard ../external/imageIO/*.cpp)
 IMAGE_LIB_HEADER=$(wildcard ../external/imageIO/*.h)
 IMAGE_LIB_OBJ=$(notdir $(patsubst %.cpp,%.o,$(IMAGE_LIB_SRC)))
 
-HEADER=$(TSMV_HEADER) $(LIB_CODE_HEADER) $(IMAGE_LIB_HEADER)
-CXX_OBJ=$(TSMV_OBJ) $(LIB_CODE_OBJ) $(IMAGE_LIB_OBJ)
+HEADER=$(TSMV_HEADER) ${BMP_HEADER} $(LIB_CODE_HEADER) $(IMAGE_LIB_HEADER)
+CXX_OBJ=$(TSMV_OBJ) ${BMP_OBJ} $(LIB_CODE_OBJ) $(IMAGE_LIB_OBJ)
 
 CXX=g++
 TARGET=main
@@ -41,6 +45,9 @@ $(TARGET): $(CXX_OBJ)
 	$(CXX) $(LDFLAGS) $^ $(OPT) $(LIB) -o $@
 
 $(TSMV_OBJ):%.o: %.cpp $(HEADER)
+	$(CXX) -c $(CXXFLAGS) $(OPT) $(INCLUDE) $< -o $@
+
+$(BMP_OBJ):%.o: %.cpp $(BMP)
 	$(CXX) -c $(CXXFLAGS) $(OPT) $(INCLUDE) $< -o $@
 
 $(LIB_CODE_OBJ):%.o: $(LIB_CODE_BASE)/%.cpp $(LIB_CODE_HEADER)
