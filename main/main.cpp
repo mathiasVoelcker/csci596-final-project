@@ -12,6 +12,8 @@
 #include <GL/glut.h>
 #endif
 
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+
 #include "basicPipelineProgram.h"
 #include "openGLMatrix.h"
 #include "imageIO.h"
@@ -19,9 +21,11 @@
 #include "glutHeader.h"
 #include "Bmp.h"
 #include <math.h>
+#include "httplib.h"
 
 #include <iostream>
 #include <cstring>
+
 
 #if defined(WIN32) || defined(_WIN32)
   #ifdef _DEBUG
@@ -53,7 +57,7 @@ float landRotate[3] = { 0.0f, 0.0f, 0.0f };
 float landTranslate[3] = { 0.0f, 0.0f, 0.0f };
 float landScale[3] = { 1.0f, 1.0f, 1.0f };
 glm::vec3 camPos = { 0, 0, 5 };
-glm::vec3 camCenter = {0, 0, 0 };
+glm::vec3 camCenter = { 0, 0, 0 };
 glm::vec3 camUp = { 0, 1, 0};
 
 int windowWidth = 1280;
@@ -488,10 +492,10 @@ void initScene(int argc, char *argv[])
   
   pipelineProgram->Bind();
   float la[4] = { 0.5f, 0.5f, 0.5f, 1 };
-  float ld[4] = { 0.8f, 0.8f, 0.8f, 1 };
+  float ld[4] = { 0.5f, 0.5f, 0.5f, 1 };
   float ls[4] = { 0, 0, 0, 1 };
-  float ka[4] = { 0.8f, 0.8f, 0.8f, 0.8f }; 
-  float kd[4] = { 1, 1, 1, 1 }; 
+  float ka[4] = { 0.5f, 0.5f, 0.5f, 0.5f }; 
+  float kd[4] = { 0.5f, 0.5f, 0.5f, 0.5f }; 
   float ks[4] = { 0, 0, 0, 0 }; 
   float alpha = 2;
   pipelineProgram->SetPhong(la, ld, ls, ka, kd, ks, alpha);
@@ -627,11 +631,23 @@ int main(int argc, char *argv[])
     }
   #endif
 
-  // do initialization
+  httplib::Params params;
+  params.emplace("format", "geojson");
+  params.emplace("starttime", "2014-01-01");
+  params.emplace("endtime", "2014-01-02");
+  
+  httplib::SSLClient cli("earthquake.usgs.gov");
+  cli.set_ca_cert_path("./ca-bundle.crt");
+  cli.enable_server_certificate_verification(true);
+
+  std::string path_with_query = httplib::append_query_params("/fdsnws/event/1/query", params);
+
+  httplib::Result res = cli.Get(path_with_query.c_str());
+  
   initScene(argc, argv);
 
-  texId = loadTexture("moon1024.bmp", true);
-  // texId = loadTexture("earth2048.bmp", true);
+  // texId = loadTexture("moon1024.bmp", true);
+  texId = loadTexture("earth2048.bmp", true);
   // sink forever into the glut loop
   glutMainLoop();
 }

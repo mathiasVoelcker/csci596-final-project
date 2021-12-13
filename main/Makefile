@@ -8,6 +8,9 @@ BMP_CODE_SRC=Bmp.cpp
 BMP_HEADER=Bmp.h
 BMP_OBJ=$(notdir $(patsubst %.cpp,%.o,$(BMP_CODE_SRC)))
 
+HTTPLIB_HEADER=httplib.h
+
+
 LIB_CODE_CXX_SRC=$(wildcard $(LIB_CODE_BASE)/*.cpp)
 LIB_CODE_HEADER=$(wildcard $(LIB_CODE_BASE)/*.h)
 LIB_CODE_OBJ=$(notdir $(patsubst %.cpp,%.o,$(LIB_CODE_CXX_SRC)))
@@ -16,7 +19,7 @@ IMAGE_LIB_SRC=$(wildcard ../external/imageIO/*.cpp)
 IMAGE_LIB_HEADER=$(wildcard ../external/imageIO/*.h)
 IMAGE_LIB_OBJ=$(notdir $(patsubst %.cpp,%.o,$(IMAGE_LIB_SRC)))
 
-HEADER=$(TSMV_HEADER) ${BMP_HEADER} $(LIB_CODE_HEADER) $(IMAGE_LIB_HEADER)
+HEADER=$(TSMV_HEADER) ${BMP_HEADER} ${HTTPLIB_HEADER} $(LIB_CODE_HEADER) $(IMAGE_LIB_HEADER)
 CXX_OBJ=$(TSMV_OBJ) ${BMP_OBJ} $(LIB_CODE_OBJ) $(IMAGE_LIB_OBJ)
 
 CXX=g++
@@ -33,8 +36,8 @@ ifeq ($(UNAME_S),Linux)
   LDFLAGS=
 else
   PLATFORM=Mac OS
-  INCLUDE=-I../external/glm/ -I$(LIB_CODE_BASE) -I../external/imageIO -I../external/jpeg-9a-mac/include
-  LIB=-framework OpenGL -framework GLUT ../external/jpeg-9a-mac/lib/libjpeg.a -lstdc++
+  INCLUDE=-I../external/glm/ -I$(LIB_CODE_BASE) -I../external/imageIO -I../external/jpeg-9a-mac/include -I../external/openssl@1.1/include 
+  LIB=-framework OpenGL -framework GLUT ../external/jpeg-9a-mac/lib/libjpeg.a ../external/openssl@1.1/lib/libssl.a ../external/openssl@1.1/lib/libcrypto.a -lstdc++
   CXXFLAGS+= -Wno-deprecated-declarations
   LDFLAGS=-Wl,-w
 endif
