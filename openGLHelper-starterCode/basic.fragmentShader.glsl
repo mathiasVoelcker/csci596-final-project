@@ -29,7 +29,10 @@ void main()
   c = ka * la + d * kd * ld + pow(s, alpha) * ks * ls;
   vec4 texCol = texture(textureImage, viewTexCoord);
   // vec4 test = vec4(viewTexCoord.x, viewTexCoord.y, viewTexCoord.x, viewTexCoord.y);
-  c = texCol * c;
+  if (col.x == 0)
+    c = texCol * c;
+  else 
+    c = col;
   
 }
 

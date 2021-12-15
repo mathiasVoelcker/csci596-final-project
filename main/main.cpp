@@ -1,9 +1,5 @@
 ﻿/*
-  CSCI 420 Computer Graphics, USC
-  Assignment 1: Height Fields with Shaders.
-  C++ starter code
-
-  Student username: <type your USC username here>
+  CSCI 596 Final Project, USC
 */
 
 #ifdef __APPLE__
@@ -337,12 +333,19 @@ void initScene(int argc, char *argv[])
   //   exit(EXIT_FAILURE);
   // }
 
-
+  //THIS DATA IS TEMPORARY, IT SHOULD BE REPLACED BY WHAT IS RETRIEVED FROM API
+  int earthquakesTotal = 3;
+  float latitudeList[3] = { 34.15, -29.119, -29.888};
+  float longitudeList[3] = { -118.34, 26.083140, -71.621 };
+  float magnitudeList[3] = { 7.0, 2.3, 4.0 };
+  // float temp_latitude = 34.15;
+  // float temp_longitude = -118.34;
+  float temp_magnitude = 4.5;
 
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   float radius = 1.0f;
-  float sectorCount = 36;
-  float stackCount = 18;
+  float sectorCount = 72;
+  float stackCount = 36;
 
   float x, y, z, xy, xy1, z1;                              // vertex position
   float nx, ny, nz, lengthInv = 1.0f / radius;    // vertex normal
@@ -363,6 +366,8 @@ void initScene(int argc, char *argv[])
 
   for(int i = 0; i <= stackCount; ++i)
   {
+      float latitude = (i - 20) * -5;
+      float nextLatitude = (i - 19) * -5;
       // if (stackAngle1 != 0)
         stackAngle1 = stackAngle;
       // else 
@@ -378,6 +383,25 @@ void initScene(int argc, char *argv[])
       // the first and last vertices have same position and normal, but different tex coords
       for(int j = 0; j <= sectorCount; ++j)
       {
+          glm::vec4 curColor = {0, 0, 0, 0};
+          float longitute = (j - 36) * 5;
+          float nextLongitude = (j - 35) * 5;
+          for (int k = 0; k < earthquakesTotal; k++)
+          {
+            float temp_longitude = longitudeList[k];
+            float temp_latitude = latitudeList[k];
+            float temp_magnitude = magnitudeList[k];
+            if (longitute < temp_longitude && temp_longitude <= nextLongitude
+              && latitude >= temp_latitude && temp_latitude > nextLatitude)
+            {
+              float green= 1 - (temp_magnitude / 9.0f);
+              if (curColor.x == 0 || green < curColor.y) //if color has already been assigned to this area, color has to be related to strongest magnitude
+              {
+                curColor.x = 1;
+                curColor.y = green;
+              }
+            }
+          } 
           sectorAngle = j * sectorStep;           // starting from 0 to 2pi
           sectorAngle1 = (j + 1) * sectorStep;
           // vertex position (x, y, z)
@@ -397,6 +421,7 @@ void initScene(int argc, char *argv[])
           vertices[3 + index] = {x11, y11, z11};
           vertices[4 + index] = {x22, y22, z12};
           vertices[5 + index] = {x21, y21, z11};
+          
 
           // normalized vertex normal (nx, ny, nz)
           nx = x * lengthInv;
@@ -424,12 +449,12 @@ void initScene(int argc, char *argv[])
           texCords[index + 5] = {s2, t1};
 
 
-          color[index] = {0, 1, 1, 1};
-          color[1 + index] = {0, 1, 1, 1};
-          color[2 + index] = {0, 1, 1, 1};
-          color[3 + index] = {0, 1, 1, 1};
-          color[4 + index] = {0, 1, 1, 1};
-          color[5 + index] = {0, 1, 1, 1};
+          color[index] = curColor;
+          color[1 + index] = curColor;
+          color[2 + index] = curColor;
+          color[3 + index] = curColor;
+          color[4 + index] = curColor;
+          color[5 + index] = curColor;
       }
   }
 
@@ -642,8 +667,20 @@ int main(int argc, char *argv[])
 
   std::string path_with_query = httplib::append_query_params("/fdsnws/event/1/query", params);
 
+  // httplib::Result res = cli.Get("/fdsnws/event/1/query?endtime=2014-01-02&format=geojson&starttime=2014-01-01", [&](const char *data, size_t data_length) {
+  //     std::cout << "data came through" << endl;
+  //     std::cout << string(data, data_length) << endl;
+  //     return true;
+  //   });
   httplib::Result res = cli.Get(path_with_query.c_str());
+
+  // cout << res->status << endl;
+  if (!res)
+  {
+    cout << "res is null" << endl;
+  }
   
+
   initScene(argc, argv);
 
   // texId = loadTexture("moon1024.bmp", true);

@@ -10,6 +10,7 @@
         "string": "cpp",
         "map": "cpp",
         "set": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "filesystem": "cpp"
     }
 }
