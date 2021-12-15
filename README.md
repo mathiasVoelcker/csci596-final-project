@@ -19,3 +19,7 @@ Run commands:
     make
     ./main 
 
+Results:
+
+![Alt Text](https://raw.githubusercontent.com/mathiasVoelcker/csci596-final-project/master/earthquake.gif)
+
