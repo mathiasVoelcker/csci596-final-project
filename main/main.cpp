@@ -59,7 +59,7 @@ glm::vec3 camUp = { 0, 1, 0};
 
 int windowWidth = 1280;
 int windowHeight = 720;
-char windowTitle[512] = "CSCI 420 homework I";
+char windowTitle[512] = "CSCI 596 Final Project";
 
 ImageIO * heightmapImage;
 
@@ -68,6 +68,8 @@ GLuint triVertexArray;
 GLuint texId;
 int sizeMesh;
 
+int totalData = 0;
+Util::properties earthquake_data[32];
 OpenGLMatrix matrix;
 BasicPipelineProgram * pipelineProgram;
 
@@ -387,11 +389,12 @@ void initScene(int argc, char *argv[])
           glm::vec4 curColor = {0, 0, 0, 0};
           float longitute = (j - 36) * 5;
           float nextLongitude = (j - 35) * 5;
-          for (int k = 0; k < earthquakesTotal; k++)
+          for (int k = 0; k < totalData; k++)
           {
-            float temp_longitude = longitudeList[k];
-            float temp_latitude = latitudeList[k];
-            float temp_magnitude = magnitudeList[k];
+            Util::properties data = earthquake_data[k];
+            float temp_longitude = data.longitude;
+            float temp_latitude = data.lat;
+            float temp_magnitude = data.mag;
             if (longitute < temp_longitude && temp_longitude <= nextLongitude
               && latitude >= temp_latitude && temp_latitude > nextLatitude)
             {
@@ -659,8 +662,8 @@ int main(int argc, char *argv[])
 
   httplib::Params params;
   params.emplace("format", "geojson");
-  params.emplace("starttime", "2014-01-01");
-  params.emplace("endtime", "2014-01-02");
+  params.emplace("starttime", argv[1]);
+  params.emplace("endtime", argv[2]);
   
   httplib::SSLClient cli("earthquake.usgs.gov");
   cli.set_ca_cert_path("./ca-bundle.crt");
@@ -677,13 +680,30 @@ int main(int argc, char *argv[])
   httplib::Result res = Util::query(params);
 
   if (res) {
-      int status = res->status; // should be 200 if succeed
-      string header_value = res->get_header_value("Content-Type");
       string body = res->body; // content
+      auto j = json::parse(body);
 
-      cout << status << endl;
-      cout << header_value << endl;
-      cout << body << endl;
+      int i = 0;
+      for (auto& eq : j["features"])
+      {
+        Util::properties p;
+        Util::from_json(eq, p);
+
+        // cout << p.mag << endl;
+        // cout << p.lat << endl;
+        // cout << p.longitude << endl;
+        // cout << p.depth << endl;
+        // cout << endl;
+        if (p.mag > 2)
+        {
+          // cout << totalData << endl;
+          earthquake_data[i] = p;
+          i++;
+          totalData++;
+          cout << totalData << endl;
+          if (i >= 32) break;
+        }
+      }
   }
   else {
       httplib::Error error = res.error();

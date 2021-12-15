@@ -11,6 +11,9 @@
         "map": "cpp",
         "set": "cpp",
         "new": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "array": "cpp",
+        "iterator": "cpp",
+        "string_view": "cpp"
     }
 }
