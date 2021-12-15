@@ -16,6 +16,7 @@
 #include "openGLHeader.h"
 #include "glutHeader.h"
 #include "Bmp.h"
+#include "Util.h"
 #include <math.h>
 #include "httplib.h"
 
@@ -672,13 +673,28 @@ int main(int argc, char *argv[])
   //     std::cout << string(data, data_length) << endl;
   //     return true;
   //   });
-  httplib::Result res = cli.Get(path_with_query.c_str());
+  // httplib::Result res = cli.Get(path_with_query.c_str());
+  httplib::Result res = Util::query(params);
+
+  if (res) {
+      int status = res->status; // should be 200 if succeed
+      string header_value = res->get_header_value("Content-Type");
+      string body = res->body; // content
+
+      cout << status << endl;
+      cout << header_value << endl;
+      cout << body << endl;
+  }
+  else {
+      httplib::Error error = res.error();
+      cout << "error code: " << error << endl;
+  }
 
   // cout << res->status << endl;
-  if (!res)
-  {
-    cout << "res is null" << endl;
-  }
+  // if (!res)
+  // {
+  //   cout << "res is null" << endl;
+  // }
   
 
   initScene(argc, argv);

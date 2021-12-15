@@ -8,6 +8,10 @@ BMP_CODE_SRC=Bmp.cpp
 BMP_HEADER=Bmp.h
 BMP_OBJ=$(notdir $(patsubst %.cpp,%.o,$(BMP_CODE_SRC)))
 
+UTIL_CODE_SRC=Util.cpp
+UTIL_HEADER=Util.h
+UTIL_OBJ=$(notdir $(patsubst %.cpp,%.o,$(UTIL_CODE_SRC)))
+
 HTTPLIB_HEADER=httplib.h
 
 
@@ -19,8 +23,8 @@ IMAGE_LIB_SRC=$(wildcard ../external/imageIO/*.cpp)
 IMAGE_LIB_HEADER=$(wildcard ../external/imageIO/*.h)
 IMAGE_LIB_OBJ=$(notdir $(patsubst %.cpp,%.o,$(IMAGE_LIB_SRC)))
 
-HEADER=$(TSMV_HEADER) ${BMP_HEADER} ${HTTPLIB_HEADER} $(LIB_CODE_HEADER) $(IMAGE_LIB_HEADER)
-CXX_OBJ=$(TSMV_OBJ) ${BMP_OBJ} $(LIB_CODE_OBJ) $(IMAGE_LIB_OBJ)
+HEADER=$(TSMV_HEADER) ${BMP_HEADER} ${UTIL_HEADER} ${HTTPLIB_HEADER} $(LIB_CODE_HEADER) $(IMAGE_LIB_HEADER)
+CXX_OBJ=$(TSMV_OBJ) ${BMP_OBJ} ${UTIL_OBJ} $(LIB_CODE_OBJ) $(IMAGE_LIB_OBJ)
 
 CXX=g++
 TARGET=main
@@ -51,6 +55,9 @@ $(TSMV_OBJ):%.o: %.cpp $(HEADER)
 	$(CXX) -c $(CXXFLAGS) $(OPT) $(INCLUDE) $< -o $@
 
 $(BMP_OBJ):%.o: %.cpp $(BMP)
+	$(CXX) -c $(CXXFLAGS) $(OPT) $(INCLUDE) $< -o $@
+
+$(UTIL_OBJ):%.o: %.cpp $(UTIL)
 	$(CXX) -c $(CXXFLAGS) $(OPT) $(INCLUDE) $< -o $@
 
 $(LIB_CODE_OBJ):%.o: $(LIB_CODE_BASE)/%.cpp $(LIB_CODE_HEADER)
