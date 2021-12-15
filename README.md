@@ -14,12 +14,15 @@ To be easy to visualize where an earthquake happened and how strong it was
 HOW TO RUN:
 
 Open terminal and navigate to /main folder
+
 Run commands:
     
     make
     ./main [init date] [final date]    
-    example: ./main 2021-02-01 2021-02-02
-    this will display earthquakes that happened around the world from 02/01/2021 to 02/02/2021
+example: 
+
+    ./main 2021-02-01 2021-02-02
+this will display earthquakes that happened around the world from 02/01/2021 to 02/02/2021
 
 RESULTS:
 
