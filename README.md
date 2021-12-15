@@ -19,7 +19,8 @@ Run commands:
     make
     ./main 
 
-Results:
+RESULTS:
 
 ![Alt Text](https://raw.githubusercontent.com/mathiasVoelcker/csci596-final-project/master/earthquake.gif)
 
+The litthe squares on earth represents location that a earthquake did happened, the more red, the higher the magnitude.
