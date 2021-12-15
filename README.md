@@ -30,3 +30,7 @@ RESULTS:
 
 The litthe squares on earth represents location that a earthquake did happened, the more red, the higher the magnitude.
 
+TEAM:
+
+Xin Qu - implemented the code to retrieve data from the API and store it as a list of objects 
+Mathias Voelcker - wrote the OpenGL code to renderize the globe and the earthquakes locations
