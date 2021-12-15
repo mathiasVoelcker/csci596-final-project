@@ -523,7 +523,7 @@ void initScene(int argc, char *argv[])
   float la[4] = { 0.5f, 0.5f, 0.5f, 1 };
   float ld[4] = { 0.5f, 0.5f, 0.5f, 1 };
   float ls[4] = { 0, 0, 0, 1 };
-  float ka[4] = { 0.5f, 0.5f, 0.5f, 0.5f }; 
+  float ka[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; 
   float kd[4] = { 0.5f, 0.5f, 0.5f, 0.5f }; 
   float ks[4] = { 0, 0, 0, 0 }; 
   float alpha = 2;
@@ -700,7 +700,6 @@ int main(int argc, char *argv[])
           earthquake_data[i] = p;
           i++;
           totalData++;
-          cout << totalData << endl;
           if (i >= 32) break;
         }
       }
