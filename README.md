@@ -17,10 +17,13 @@ Open terminal and navigate to /main folder
 Run commands:
     
     make
-    ./main 
+    ./main [init date] [final date]    
+    example: ./main 2021-02-01 2021-02-02
+    this will display earthquakes that happened around the world from 02/01/2021 to 02/02/2021
 
 RESULTS:
 
 ![Alt Text](https://raw.githubusercontent.com/mathiasVoelcker/csci596-final-project/master/earthquake.gif)
 
 The litthe squares on earth represents location that a earthquake did happened, the more red, the higher the magnitude.
+
